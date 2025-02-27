@@ -3,12 +3,40 @@ import pandas as pd
 from datetime import datetime, timedelta
 import streamlit as st
 from typing import Dict, List, Optional
+import os
+
+def _validate_api_key(api_key: str) -> Dict:
+    """
+    Validate the API key by making a test request.
+    """
+    try:
+        response = requests.get(
+            "https://api.pokemontcg.io/v2/cards",
+            params={"pageSize": 1},
+            headers={"X-Api-Key": api_key}
+        )
+
+        if response.status_code == 200:
+            return {"success": True, "error": None}
+        elif response.status_code == 401:
+            return {"success": False, "error": "Invalid API key"}
+        else:
+            return {"success": False, "error": f"API Error: {response.status_code}"}
+    except Exception as e:
+        return {"success": False, "error": f"Connection error: {str(e)}"}
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def _fetch_card_market_data(card_name: str, api_key: str) -> Dict:
     """
     Fetch current market data for a specific Pokemon card.
     """
+    if not api_key:
+        return {
+            "success": False,
+            "error": "Pokemon TCG API key not found. Please check your configuration.",
+            "data": None
+        }
+
     try:
         # Clean the card name for the API query
         query = card_name.lower().strip()
@@ -54,6 +82,7 @@ def _fetch_card_market_data(card_name: str, api_key: str) -> Dict:
         }
 
     except Exception as e:
+        st.error(f"Error fetching market data: {str(e)}")
         return {
             "success": False,
             "error": f"Error fetching market data: {str(e)}",
@@ -65,6 +94,13 @@ def _fetch_market_trends(api_key: str) -> Dict:
     """
     Get overall market trends and statistics.
     """
+    if not api_key:
+        return {
+            "success": False,
+            "error": "Pokemon TCG API key not found. Please check your configuration.",
+            "data": None
+        }
+
     try:
         response = requests.get(
             "https://api.pokemontcg.io/v2/cards",
@@ -89,6 +125,13 @@ def _fetch_market_trends(api_key: str) -> Dict:
             if card.get("cardmarket")
         ]
 
+        if not prices:
+            return {
+                "success": False,
+                "error": "No price data available",
+                "data": None
+            }
+
         metrics = {
             "total_cards": len(cards),
             "average_price": sum(prices) / len(prices) if prices else 0,
@@ -104,6 +147,7 @@ def _fetch_market_trends(api_key: str) -> Dict:
         }
 
     except Exception as e:
+        st.error(f"Error fetching market trends: {str(e)}")
         return {
             "success": False,
             "error": f"Error fetching market trends: {str(e)}",
@@ -137,7 +181,25 @@ class PokemonMarketData:
     """
 
     def __init__(self):
-        self.api_key = st.secrets.get("POKEMON_TCG_API_KEY", "")
+        # Try to get API key from environment first, then fallback to secrets
+        self.api_key = os.environ.get("POKEMON_TCG_API_KEY", "")
+
+        if not self.api_key:
+            try:
+                self.api_key = st.secrets["POKEMON_TCG_API_KEY"]
+            except Exception:
+                st.error("""
+                Pokemon TCG API key not found. Please ensure the API key is properly configured.
+                If you haven't set up your API key yet, you can get one from https://dev.pokemontcg.io/
+                """)
+                self.api_key = ""
+                return
+
+        # Validate API key
+        validation_result = _validate_api_key(self.api_key)
+        if not validation_result["success"]:
+            st.error(f"API key validation failed: {validation_result['error']}")
+            self.api_key = ""
 
     def get_card_market_data(self, card_name: str) -> Dict:
         """

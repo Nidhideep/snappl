@@ -13,6 +13,11 @@ def display_market_info(card_name: str):
 
     if not result['success']:
         st.warning(f"Could not fetch market data: {result['error']}")
+        st.info("""
+        To enable real-time market data:
+        1. Get your API key from https://dev.pokemontcg.io/
+        2. Configure the API key in your environment
+        """)
         return
 
     data = result['data']
