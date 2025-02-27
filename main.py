@@ -11,7 +11,7 @@ st.set_page_config(
 # Logo and title
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.image("attached_assets/create pokemon card image.jpg", width=300, use_column_width=True)
+    st.image("attached_assets/create pokemon card image.jpg", width=200)
 
 st.title("Snappl Pokemon Card Market Analysis")
 st.markdown("Enter a Pokemon card name to get real-time market data and card information.")
