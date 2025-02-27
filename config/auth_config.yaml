@@ -1,0 +1,6 @@
+credentials:
+  usernames: {}
+cookie:
+  expiry_days: 30
+  key: "trading_cards_signature_key"
+  name: "trading_cards_auth_cookie"
