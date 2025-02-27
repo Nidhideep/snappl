@@ -8,12 +8,10 @@ st.set_page_config(
     layout="wide"
 )
 
-# Title and description
+# Logo and title
+st.image("attached_assets/create pokemon card image.jpg", width=100)
 st.title("Snappl Pokemon Card Market Analysis")
 st.markdown("Enter a Pokemon card name to get real-time market data and card information.")
-
-# Display app logo
-st.sidebar.image("attached_assets/create pokemon card image.jpg", width=150)
 
 # Search input
 card_name = st.text_input(
