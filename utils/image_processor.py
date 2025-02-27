@@ -11,13 +11,24 @@ def is_pokemon_card(text_content):
     """
     pokemon_keywords = [
         'hp', 'pokemon', 'trainer', 'energy',
-        'evolves from', 'attack', 'weakness',
-        'resistance', 'retreat cost'
+        'evolves', 'attack', 'weakness',
+        'retreat', 'stage', 'basic',
+        'damage', 'effect', 'power'
     ]
 
+    # Debug output
     text_lower = ' '.join(text_content).lower()
-    matches = sum(1 for keyword in pokemon_keywords if keyword in text_lower)
-    return matches >= 2  # At least 2 Pokemon-related keywords should be present
+    st.write("Detected text:", text_lower)
+
+    # Count matches
+    matches = []
+    for keyword in pokemon_keywords:
+        if keyword in text_lower:
+            matches.append(keyword)
+
+    st.write("Matched Pokemon keywords:", matches)
+
+    return len(matches) >= 1  # Relaxed condition - need at least 1 Pokemon-related keyword
 
 def extract_pokemon_info(text_lines):
     """
@@ -38,14 +49,16 @@ def extract_pokemon_info(text_lines):
             hp_parts = line.split('HP')
             if len(hp_parts) > 1:
                 info['hp'] = hp_parts[0].strip()
-        elif any(attack_word in line_lower for attack_word in ['attack', 'damage']):
+        elif any(attack_word in line_lower for attack_word in ['attack', 'damage', 'effect']):
             info['attacks'].append(line)
         else:
             info['other_text'].append(line)
 
-    # Usually the first line is the Pokemon name
-    if text_lines:
-        info['name'] = text_lines[0]
+    # Usually the first non-empty line that's not HP is the Pokemon name
+    for line in text_lines:
+        if line and 'hp' not in line.lower():
+            info['name'] = line
+            break
 
     return info
 
@@ -67,10 +80,6 @@ def preprocess_image(image_bytes):
         else:
             image = image_array
 
-        # Add debug info
-        st.write(f"Image shape: {image.shape}")
-        st.write(f"Image dtype: {image.dtype}")
-
         # Convert to grayscale
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -80,6 +89,9 @@ def preprocess_image(image_bytes):
         # Apply dilation to connect text components
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
         gray = cv2.dilate(gray, kernel, iterations=1)
+
+        # Debug output - show preprocessed image
+        st.image(gray, caption="Preprocessed Image (Grayscale)", use_container_width=True)
 
         return gray, None
     except Exception as e:
@@ -101,15 +113,16 @@ def extract_card_text(image_bytes):
                 'error': f"Image preprocessing failed: {error}"
             }
 
-        # Show processed image for debugging
-        st.image(processed_image, caption="Processed Image", use_container_width=True)
-
-        # Extract text using pytesseract
-        text = pytesseract.image_to_string(processed_image)
+        # Extract text using pytesseract with custom configuration
+        custom_config = r'--oem 3 --psm 6'  # Assume uniform text layout
+        text = pytesseract.image_to_string(processed_image, config=custom_config)
 
         # Process the extracted text
         lines = text.split('\n')
         filtered_lines = [line.strip() for line in lines if line.strip()]
+
+        # Debug output
+        st.write("OCR Detected Lines:", filtered_lines)
 
         # Validate if it's a Pokemon card
         if not is_pokemon_card(filtered_lines):
