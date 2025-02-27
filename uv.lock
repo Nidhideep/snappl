@@ -684,7 +684,9 @@ dependencies = [
     { name = "pandas" },
     { name = "plotly" },
     { name = "pytesseract" },
+    { name = "python-dateutil" },
     { name = "pyyaml" },
+    { name = "requests" },
     { name = "streamlit" },
     { name = "streamlit-authenticator" },
 ]
@@ -696,7 +698,9 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "plotly", specifier = ">=6.0.0" },
     { name = "pytesseract", specifier = ">=0.3.13" },
+    { name = "python-dateutil", specifier = ">=2.9.0.post0" },
     { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "requests", specifier = ">=2.32.3" },
     { name = "streamlit", specifier = ">=1.42.2" },
     { name = "streamlit-authenticator", specifier = ">=0.4.1" },
 ]
