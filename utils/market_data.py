@@ -39,12 +39,16 @@ def _fetch_card_market_data(card_name: str, api_key: str) -> Dict:
 
     try:
         # Clean the card name for the API query
-        query = card_name.lower().strip()
+        query = f'name:"{card_name}"'  # Exact name matching with quotes
 
         # Make API request
         response = requests.get(
             "https://api.pokemontcg.io/v2/cards",
-            params={"q": f"name:{query}"},
+            params={
+                "q": query,
+                "orderBy": "-cardmarket.prices.averageSellPrice",  # Sort by price descending
+                "pageSize": 10  # Get multiple results to find the right variant
+            },
             headers={"X-Api-Key": api_key}
         )
 
@@ -58,14 +62,40 @@ def _fetch_card_market_data(card_name: str, api_key: str) -> Dict:
         data = response.json()
 
         if not data.get("data"):
-            return {
-                "success": False,
-                "error": "No data found for this card",
-                "data": None
-            }
+            # Try a more flexible search if exact match fails
+            query = f'name:*{card_name}*'  # Partial name matching
+            response = requests.get(
+                "https://api.pokemontcg.io/v2/cards",
+                params={
+                    "q": query,
+                    "orderBy": "-cardmarket.prices.averageSellPrice",
+                    "pageSize": 10
+                },
+                headers={"X-Api-Key": api_key}
+            )
+            data = response.json()
+
+            if not data.get("data"):
+                return {
+                    "success": False,
+                    "error": "No data found for this card",
+                    "data": None
+                }
+
+        # Find the best matching card
+        card_data = None
+        search_name_lower = card_name.lower()
+        for card in data["data"]:
+            if card.get("cardmarket") and card.get("cardmarket").get("prices"):
+                card_name_lower = card["name"].lower()
+                if search_name_lower in card_name_lower:
+                    card_data = card
+                    break
+
+        if not card_data:
+            card_data = data["data"][0]  # Take the first result if no better match
 
         # Process market data
-        card_data = data["data"][0]
         market_data = {
             "card_name": card_data["name"],
             "set": card_data.get("set", {}).get("name", "Unknown"),
@@ -74,7 +104,9 @@ def _fetch_card_market_data(card_name: str, api_key: str) -> Dict:
             "last_update": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "trend": _calculate_price_trend(card_data),
             "availability": _get_availability_status(card_data),
-            "rarity": card_data.get("rarity", "Unknown")
+            "rarity": card_data.get("rarity", "Unknown"),
+            "supertype": card_data.get("supertype", "Unknown"),
+            "subtypes": ", ".join(card_data.get("subtypes", []))
         }
 
         return {
@@ -148,7 +180,6 @@ def _fetch_market_trends(api_key: str) -> Dict:
         }
 
     except Exception as e:
-        st.error(f"Error fetching market trends: {str(e)}")
         return {
             "success": False,
             "error": f"Error fetching market trends: {str(e)}",

@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.market_data import PokemonMarketData # Placeholder import
+from utils.market_data import PokemonMarketData
 
 # Page configuration
 st.set_page_config(
@@ -10,10 +10,16 @@ st.set_page_config(
 
 # Title and description
 st.title("Pokemon Card Market Analysis")
-st.markdown("Enter a Pokemon card name to get real-time market data and card information.")
+st.markdown("""
+Enter a Pokemon card name to get real-time market data and card information.
+You can search for specific variants like 'Charizard V' or 'Pikachu VMAX'.
+""")
 
 # Search input
-card_name = st.text_input("Search for a Pokemon card:", placeholder="e.g., Charizard, Pikachu")
+card_name = st.text_input(
+    "Search for a Pokemon card:",
+    placeholder="e.g., Charizard V, Pikachu VMAX, Mewtwo GX"
+)
 
 if card_name:
     market_data = PokemonMarketData()
@@ -32,14 +38,16 @@ if card_name:
             else:
                 st.write("No image found for this card.")
 
-
         with col2:
             # Display market data
             st.header(data['card_name'])
-            if data.get('set'):
-                st.subheader(f"Set: {data['set']}")
-            else:
-                st.write("Set information not available.")
+
+            # Card details
+            st.markdown(f"""
+            **Type:** {data['supertype']} {data['subtypes']}  
+            **Set:** {data['set']}  
+            **Rarity:** {data['rarity']}
+            """)
 
             # Market metrics
             metric_col1, metric_col2, metric_col3 = st.columns(3)
@@ -65,7 +73,6 @@ if card_name:
                 except KeyError:
                     st.metric("Last Updated", "N/A")
 
-
             # Market analysis
             st.markdown("### Market Analysis")
             try:
@@ -77,13 +84,12 @@ if card_name:
             except KeyError:
                 st.write("Market analysis not available.")
 
-
     else:
         st.error(f"Error fetching card data: {result['error']}")
         st.info("""
         Tips:
         - Check the spelling of the card name
-        - Try using the full name of the card
+        - Try including the card variant (V, VMAX, GX, etc.)
         - Some cards might not have market data available
         """)
 
@@ -96,7 +102,7 @@ class PokemonMarketData:
     def get_card_market_data(self, card_name: str) -> Dict[str, Any]:
         # Replace this with your actual API call and data processing
         # This is a placeholder that simulates successful and unsuccessful responses
-        if card_name.lower() in ["charizard", "pikachu"]:
+        if card_name.lower() in ["charizard", "pikachu", "charizard v", "pikachu vmax"]:
             return {
                 'success': True,
                 'data': {
@@ -106,7 +112,10 @@ class PokemonMarketData:
                     'trend': "Up 10%",
                     'availability': "High",
                     'last_update': "2024-03-08",
-                    'set': "Base Set"
+                    'set': "Base Set",
+                    'supertype': 'Pokémon',
+                    'subtypes': ['Basic'],
+                    'rarity': 'Rare'
                 }
             }
         else:
