@@ -26,63 +26,46 @@ if card_name:
     result = market_data.get_card_market_data(card_name)
 
     if result['success']:
-        data = result['data']
+        cards_data = result['data']
 
-        # Create two columns for layout
-        col1, col2 = st.columns([1, 2])
+        st.markdown(f"### Found {len(cards_data)} variants of {card_name}")
 
-        with col1:
-            # Display card image
-            if data.get('image_url'):
-                st.image(data['image_url'], caption=data['card_name'], use_column_width=True)
-            else:
-                st.write("No image found for this card.")
+        # Create a grid layout for multiple cards
+        cols = st.columns(2)  # Display 2 cards per row
 
-        with col2:
-            # Display market data
-            st.header(data['card_name'])
+        for idx, card in enumerate(cards_data):
+            col = cols[idx % 2]  # Alternate between columns
 
-            # Card details
-            st.markdown(f"""
-            **Type:** {data['supertype']} {data['subtypes']}  
-            **Set:** {data['set']}  
-            **Rarity:** {data['rarity']}
-            """)
+            with col:
+                st.markdown("---")
+                # Card container
+                with st.container():
+                    # Display card image and basic info
+                    if card.get('image_url'):
+                        st.image(card['image_url'], caption=card['card_name'], use_column_width=True)
 
-            # Market metrics
-            metric_col1, metric_col2, metric_col3 = st.columns(3)
-            with metric_col1:
-                try:
-                    st.metric(
-                        "Current Price",
-                        f"${data['current_price']:.2f}",
-                        delta=data['trend'].split()[0]
-                    )
-                except (KeyError, TypeError):
-                    st.metric("Current Price", "N/A")
+                    # Card details
+                    st.markdown(f"### {card['card_name']}")
+                    st.markdown(f"""
+                    **Set:** {card['set']}  
+                    **Number:** {card['number']}  
+                    **Artist:** {card['artist']}  
+                    **Type:** {card['supertype']} {card['subtypes']}  
+                    **Rarity:** {card['rarity']}
+                    """)
 
-            with metric_col2:
-                try:
-                    st.metric("Availability", data['availability'])
-                except KeyError:
-                    st.metric("Availability", "N/A")
-
-            with metric_col3:
-                try:
-                    st.metric("Last Updated", data['last_update'])
-                except KeyError:
-                    st.metric("Last Updated", "N/A")
-
-            # Market analysis
-            st.markdown("### Market Analysis")
-            try:
-                st.markdown(f"""
-                - **Price Trend**: {data['trend']}
-                - **Market Status**: {data['availability']} availability
-                - **Set Information**: From {data['set']}
-                """)
-            except KeyError:
-                st.write("Market analysis not available.")
+                    # Market metrics in columns
+                    m1, m2, m3 = st.columns(3)
+                    with m1:
+                        st.metric(
+                            "Price",
+                            f"${card['current_price']:.2f}",
+                            delta=card['trend'].split()[0]
+                        )
+                    with m2:
+                        st.metric("Availability", card['availability'])
+                    with m3:
+                        st.metric("Updated", card['last_update'])
 
     else:
         st.error(f"Error fetching card data: {result['error']}")
@@ -96,7 +79,7 @@ if card_name:
 # Placeholder for utils.market_data module
 # This module needs to be implemented with actual API calls.
 # Replace this with your actual implementation
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 class PokemonMarketData:
     def get_card_market_data(self, card_name: str) -> Dict[str, Any]:
@@ -105,18 +88,36 @@ class PokemonMarketData:
         if card_name.lower() in ["charizard", "pikachu", "charizard v", "pikachu vmax"]:
             return {
                 'success': True,
-                'data': {
-                    'card_name': card_name.title(),
-                    'image_url': "https://example.com/image.jpg",  # Replace with actual image URL
-                    'current_price': 100.50,
-                    'trend': "Up 10%",
-                    'availability': "High",
-                    'last_update': "2024-03-08",
-                    'set': "Base Set",
-                    'supertype': 'Pokémon',
-                    'subtypes': ['Basic'],
-                    'rarity': 'Rare'
-                }
+                'data': [
+                    {
+                        'card_name': "Charizard V",
+                        'image_url': "https://example.com/charizard_v.jpg",
+                        'current_price': 100.50,
+                        'trend': "Up 10%",
+                        'availability': "High",
+                        'last_update': "2024-03-08",
+                        'set': "Sword & Shield",
+                        'number': '10',
+                        'artist': 'Artist1',
+                        'supertype': 'Pokémon',
+                        'subtypes': ['Basic'],
+                        'rarity': 'Rare'
+                    },
+                    {
+                        'card_name': "Pikachu VMAX",
+                        'image_url': "https://example.com/pikachu_vmax.jpg",
+                        'current_price': 50.25,
+                        'trend': "Down 5%",
+                        'availability': "Medium",
+                        'last_update': "2024-03-07",
+                        'set': "Sword & Shield",
+                        'number': '20',
+                        'artist': 'Artist2',
+                        'supertype': 'Pokémon',
+                        'subtypes': ['Basic'],
+                        'rarity': 'Rare Holo'
+                    }
+                ]
             }
         else:
             return {

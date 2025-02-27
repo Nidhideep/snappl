@@ -15,4 +15,5 @@ dependencies = [
     "requests>=2.32.3",
     "python-dateutil>=2.9.0.post0",
     "twilio>=9.4.6",
+    "trafilatura>=2.0.0",
 ]
