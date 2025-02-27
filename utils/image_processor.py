@@ -5,6 +5,50 @@ from PIL import Image
 import io
 import streamlit as st
 
+def is_pokemon_card(text_content):
+    """
+    Check if the card is a Pokemon card based on text content.
+    """
+    pokemon_keywords = [
+        'hp', 'pokemon', 'trainer', 'energy',
+        'evolves from', 'attack', 'weakness',
+        'resistance', 'retreat cost'
+    ]
+
+    text_lower = ' '.join(text_content).lower()
+    matches = sum(1 for keyword in pokemon_keywords if keyword in text_lower)
+    return matches >= 2  # At least 2 Pokemon-related keywords should be present
+
+def extract_pokemon_info(text_lines):
+    """
+    Extract Pokemon-specific information from text lines.
+    """
+    info = {
+        'name': '',
+        'hp': '',
+        'type': '',
+        'attacks': [],
+        'other_text': []
+    }
+
+    for line in text_lines:
+        line_lower = line.lower()
+        if 'hp' in line_lower:
+            # Try to extract HP value
+            hp_parts = line.split('HP')
+            if len(hp_parts) > 1:
+                info['hp'] = hp_parts[0].strip()
+        elif any(attack_word in line_lower for attack_word in ['attack', 'damage']):
+            info['attacks'].append(line)
+        else:
+            info['other_text'].append(line)
+
+    # Usually the first line is the Pokemon name
+    if text_lines:
+        info['name'] = text_lines[0]
+
+    return info
+
 def preprocess_image(image_bytes):
     """
     Preprocess the uploaded image for better OCR results.
@@ -67,12 +111,22 @@ def extract_card_text(image_bytes):
         lines = text.split('\n')
         filtered_lines = [line.strip() for line in lines if line.strip()]
 
-        # Debug output
-        st.write("Extracted text lines:", filtered_lines)
+        # Validate if it's a Pokemon card
+        if not is_pokemon_card(filtered_lines):
+            return {
+                'card_name': '',
+                'raw_text': filtered_lines,
+                'success': False,
+                'error': "The uploaded image does not appear to be a Pokemon card"
+            }
+
+        # Extract Pokemon-specific information
+        pokemon_info = extract_pokemon_info(filtered_lines)
 
         return {
-            'card_name': filtered_lines[0] if filtered_lines else '',
+            'card_name': pokemon_info['name'],
             'raw_text': filtered_lines,
+            'pokemon_info': pokemon_info,
             'success': True,
             'error': None
         }
@@ -87,7 +141,7 @@ def extract_card_text(image_bytes):
 
 def analyze_card_image(image_bytes):
     """
-    Analyze the card image and extract relevant information.
+    Analyze the Pokemon card image and extract relevant information.
     """
     try:
         # Extract text from the image
@@ -104,6 +158,7 @@ def analyze_card_image(image_bytes):
         analysis = {
             'card_name': ocr_result['card_name'],
             'text_content': ocr_result['raw_text'],
+            'pokemon_info': ocr_result.get('pokemon_info', {}),
             'potential_matches': []  # Will be populated with database matches
         }
 
