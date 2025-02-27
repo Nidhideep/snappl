@@ -3,22 +3,19 @@ from utils.market_data import PokemonMarketData
 
 # Page configuration
 st.set_page_config(
-    page_title="Pokemon Card Market Analysis",
+    page_title="Snappl Pokemon Card Market Analysis",
     page_icon="🃏",
     layout="wide"
 )
 
 # Title and description
-st.title("Pokemon Card Market Analysis")
-st.markdown("""
-Enter a Pokemon card name to get real-time market data and card information.
-You can search for specific variants like 'Charizard V' or 'Pikachu VMAX'.
-""")
+st.title("Snappl Pokemon Card Market Analysis")
+st.markdown("Enter a Pokemon card name to get real-time market data and card information.")
 
 # Search input
 card_name = st.text_input(
     "Search for a Pokemon card:",
-    placeholder="e.g., Charizard V, Pikachu VMAX, Mewtwo GX"
+    placeholder="e.g., Charizard, Pikachu"
 )
 
 if card_name:
@@ -72,7 +69,6 @@ if card_name:
         st.info("""
         Tips:
         - Check the spelling of the card name
-        - Try including the card variant (V, VMAX, GX, etc.)
         - Some cards might not have market data available
         """)
 
