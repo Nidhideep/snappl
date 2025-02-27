@@ -4,13 +4,16 @@ from utils.market_data import PokemonMarketData
 # Page configuration
 st.set_page_config(
     page_title="Snappl Pokemon Card Market Analysis",
-    page_icon="🃏",
+    page_icon="attached_assets/create pokemon card image.jpg",
     layout="wide"
 )
 
 # Title and description
 st.title("Snappl Pokemon Card Market Analysis")
 st.markdown("Enter a Pokemon card name to get real-time market data and card information.")
+
+# Display app logo
+st.sidebar.image("attached_assets/create pokemon card image.jpg", width=150)
 
 # Search input
 card_name = st.text_input(
