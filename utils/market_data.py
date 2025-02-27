@@ -70,9 +70,11 @@ def _fetch_card_market_data(card_name: str, api_key: str) -> Dict:
             "card_name": card_data["name"],
             "set": card_data.get("set", {}).get("name", "Unknown"),
             "current_price": card_data.get("cardmarket", {}).get("prices", {}).get("averageSellPrice", 0),
+            "image_url": card_data.get("images", {}).get("large") or card_data.get("images", {}).get("small"),
             "last_update": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "trend": _calculate_price_trend(card_data),
-            "availability": _get_availability_status(card_data)
+            "availability": _get_availability_status(card_data),
+            "rarity": card_data.get("rarity", "Unknown")
         }
 
         return {
@@ -82,7 +84,6 @@ def _fetch_card_market_data(card_name: str, api_key: str) -> Dict:
         }
 
     except Exception as e:
-        st.error(f"Error fetching market data: {str(e)}")
         return {
             "success": False,
             "error": f"Error fetching market data: {str(e)}",
@@ -168,10 +169,12 @@ def _calculate_price_trend(card_data: Dict) -> str:
 
 def _get_availability_status(card_data: Dict) -> str:
     """Determine card availability status."""
-    total_prints = card_data.get("set", {}).get("total", 0)
-    if total_prints <= 50:
+    rarity = card_data.get("rarity", "").lower()
+    if "rare" in rarity and "ultra" in rarity:
+        return "Very Rare"
+    elif "rare" in rarity:
         return "Rare"
-    elif total_prints <= 100:
+    elif "uncommon" in rarity:
         return "Uncommon"
     return "Common"
 

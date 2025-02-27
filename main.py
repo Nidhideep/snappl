@@ -1,111 +1,116 @@
 import streamlit as st
-import pandas as pd
-from utils.data_generator import generate_card_data, generate_price_history, generate_market_metrics
-from components.card_grid import display_card_grid
-from components.market_analytics import display_market_metrics, display_market_analysis
-from components.profile import display_profile
-from components.watchlist import display_watchlist
-from components.card_analyzer import display_card_analysis
+from utils.market_data import PokemonMarketData # Placeholder import
 
 # Page configuration
 st.set_page_config(
-    page_title="Trading Card Market Analysis",
+    page_title="Pokemon Card Market Analysis",
     page_icon="🃏",
     layout="wide"
 )
 
-# Load custom CSS
-with open("assets/custom.css") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+# Title and description
+st.title("Pokemon Card Market Analysis")
+st.markdown("Enter a Pokemon card name to get real-time market data and card information.")
 
-# Initialize session state
-if 'cards_df' not in st.session_state:
-    st.session_state.cards_df = generate_card_data()
-if 'price_history' not in st.session_state:
-    st.session_state.price_history = generate_price_history()
-if 'market_metrics' not in st.session_state:
-    st.session_state.market_metrics = generate_market_metrics()
+# Search input
+card_name = st.text_input("Search for a Pokemon card:", placeholder="e.g., Charizard, Pikachu")
 
-# Sidebar
-st.sidebar.title("Trading Card Market")
-page = st.sidebar.radio("Navigation", ["Market Overview", "Card Analysis", "My Profile", "Watchlist"])
+if card_name:
+    market_data = PokemonMarketData()
+    result = market_data.get_card_market_data(card_name)
 
-# Card search
-st.sidebar.markdown("## Search & Filters")
-search_query = st.sidebar.text_input("Search Cards", "")
+    if result['success']:
+        data = result['data']
 
-# Filters
-name_filter = st.sidebar.multiselect(
-    "Card Name",
-    options=st.session_state.cards_df['name'].unique()
-)
-condition_filter = st.sidebar.multiselect(
-    "Condition",
-    options=st.session_state.cards_df['condition'].unique()
-)
-price_range = st.sidebar.slider(
-    "Price Range ($)",
-    min_value=0,
-    max_value=10000,
-    value=(0, 10000)
-)
+        # Create two columns for layout
+        col1, col2 = st.columns([1, 2])
 
-# Apply filters and search
-filtered_df = st.session_state.cards_df
-if search_query:
-    filtered_df = filtered_df[filtered_df['name'].str.contains(search_query, case=False)]
-if name_filter:
-    filtered_df = filtered_df[filtered_df['name'].isin(name_filter)]
-if condition_filter:
-    filtered_df = filtered_df[filtered_df['condition'].isin(condition_filter)]
-filtered_df = filtered_df[
-    (filtered_df['price'] >= price_range[0]) &
-    (filtered_df['price'] <= price_range[1])
-]
+        with col1:
+            # Display card image
+            if data.get('image_url'):
+                st.image(data['image_url'], caption=data['card_name'], use_column_width=True)
+            else:
+                st.write("No image found for this card.")
 
-# Main content
-if page == "Market Overview":
-    st.title("Trading Card Market Analysis")
 
-    display_market_metrics(st.session_state.market_metrics)
-    st.markdown("---")
+        with col2:
+            # Display market data
+            st.header(data['card_name'])
+            if data.get('set'):
+                st.subheader(f"Set: {data['set']}")
+            else:
+                st.write("Set information not available.")
 
-    display_market_analysis(
-        st.session_state.price_history,
-        st.session_state.cards_df
-    )
-    st.markdown("---")
+            # Market metrics
+            metric_col1, metric_col2, metric_col3 = st.columns(3)
+            with metric_col1:
+                try:
+                    st.metric(
+                        "Current Price",
+                        f"${data['current_price']:.2f}",
+                        delta=data['trend'].split()[0]
+                    )
+                except (KeyError, TypeError):
+                    st.metric("Current Price", "N/A")
 
-    display_card_grid(filtered_df)
+            with metric_col2:
+                try:
+                    st.metric("Availability", data['availability'])
+                except KeyError:
+                    st.metric("Availability", "N/A")
 
-elif page == "Card Analysis":
-    st.title("Card Image Analysis")
+            with metric_col3:
+                try:
+                    st.metric("Last Updated", data['last_update'])
+                except KeyError:
+                    st.metric("Last Updated", "N/A")
 
-    # Card image upload
-    uploaded_file = st.file_uploader(
-        "Upload a card image for analysis",
-        type=['jpg', 'png', 'jpeg'],
-        help="Upload a clear image of your trading card for instant analysis"
-    )
 
-    if uploaded_file:
-        display_card_analysis(uploaded_file)
+            # Market analysis
+            st.markdown("### Market Analysis")
+            try:
+                st.markdown(f"""
+                - **Price Trend**: {data['trend']}
+                - **Market Status**: {data['availability']} availability
+                - **Set Information**: From {data['set']}
+                """)
+            except KeyError:
+                st.write("Market analysis not available.")
+
+
     else:
-        st.info("Upload a card image to get detailed market analysis and price estimates.")
+        st.error(f"Error fetching card data: {result['error']}")
+        st.info("""
+        Tips:
+        - Check the spelling of the card name
+        - Try using the full name of the card
+        - Some cards might not have market data available
+        """)
 
-elif page == "My Profile":
-    display_profile()
+# Placeholder for utils.market_data module
+# This module needs to be implemented with actual API calls.
+# Replace this with your actual implementation
+from typing import Dict, Any
 
-else:  # Watchlist
-    display_watchlist(filtered_df.head())
-
-# Footer
-st.markdown("---")
-st.markdown(
-    """
-    <div style='text-align: center'>
-        <p>Trading Card Market Analysis Platform • © 2023</p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+class PokemonMarketData:
+    def get_card_market_data(self, card_name: str) -> Dict[str, Any]:
+        # Replace this with your actual API call and data processing
+        # This is a placeholder that simulates successful and unsuccessful responses
+        if card_name.lower() in ["charizard", "pikachu"]:
+            return {
+                'success': True,
+                'data': {
+                    'card_name': card_name.title(),
+                    'image_url': "https://example.com/image.jpg",  # Replace with actual image URL
+                    'current_price': 100.50,
+                    'trend': "Up 10%",
+                    'availability': "High",
+                    'last_update': "2024-03-08",
+                    'set': "Base Set"
+                }
+            }
+        else:
+            return {
+                'success': False,
+                'error': "Card not found"
+            }
