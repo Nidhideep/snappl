@@ -5,7 +5,8 @@ from utils.market_data import PokemonMarketData
 st.set_page_config(
     page_title="Snappl Pokemon Card Market Analysis",
     page_icon="attached_assets/create pokemon card image.jpg",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"  # This will collapse the sidebar by default
 )
 
 # Logo and title
@@ -44,7 +45,7 @@ if card_name:
                 with st.container():
                     # Display card image and basic info
                     if card.get('image_url'):
-                        st.image(card['image_url'], caption=card['card_name'], use_column_width=True)
+                        st.image(card['image_url'], caption=card['card_name'], use_container_width=True)
 
                     # Card details
                     st.markdown(f"### {card['card_name']}")
@@ -76,6 +77,15 @@ if card_name:
         - Check the spelling of the card name
         - Some cards might not have market data available
         """)
+
+# Hide Streamlit default menu and footer
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+</style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # Placeholder for utils.market_data module
 # This module needs to be implemented with actual API calls.
