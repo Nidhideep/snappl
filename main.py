@@ -15,6 +15,7 @@ with col2:
 
 st.title("Snappl Pokemon Card Market Analysis")
 st.markdown("Enter a Pokemon card name to get real-time market data and card information.")
+st.markdown("*Info: There are some Pokemon cards we have not got written down!*")
 
 # Search input
 card_name = st.text_input(
