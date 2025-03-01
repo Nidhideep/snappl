@@ -4,7 +4,7 @@ from utils.market_data import PokemonMarketData
 # Page configuration
 st.set_page_config(
     page_title="Snappl Pokemon Card Market Analysis",
-    page_icon="attached_assets/create pokemon card image.jpg",
+    page_icon="attached_assets/pokemon.webp",
     layout="wide",
     initial_sidebar_state="collapsed"  # This will collapse the sidebar by default
 )
@@ -12,7 +12,7 @@ st.set_page_config(
 # Logo and title
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.image("attached_assets/create pokemon card image.jpg", width=200)
+    st.image("attached_assets/pokemon.webp", width=200)
 
 st.title("Snappl Pokemon Card Market Analysis")
 st.markdown("Enter a Pokemon card name to get real-time market data and card information.")
