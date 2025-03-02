@@ -29,6 +29,9 @@ card_name = st.text_input(
     placeholder="e.g., Charizard, Pikachu"
 )
 
+# Calculator Section at the top (moved outside search results)
+calculator_container = st.container()
+
 if card_name:
     market_data = PokemonMarketData()
     result = market_data.get_card_market_data(card_name)
@@ -37,9 +40,6 @@ if card_name:
         cards_data = result['data']
 
         st.markdown(f"### Found {len(cards_data)} variants of {card_name}")
-
-        # Calculator Section at the top
-        calculator_container = st.container()
         st.markdown("---")
 
         # Create a grid layout for multiple cards
@@ -55,12 +55,26 @@ if card_name:
                     # Checkbox and card title in the same row
                     col_check, col_title = st.columns([1, 4])
                     with col_check:
-                        checkbox_key = f"select_{idx}_{card['card_name']}"
-                        is_selected = st.checkbox("", key=checkbox_key)
-                        if is_selected and card not in st.session_state.selected_cards:
+                        # Create a unique key using card properties
+                        checkbox_key = f"select_{card['card_name']}_{card['set']}_{card['number']}"
+                        # Check if card is already selected
+                        is_already_selected = any(
+                            selected['card_name'] == card['card_name'] and 
+                            selected['set'] == card['set'] and 
+                            selected['number'] == card['number']
+                            for selected in st.session_state.selected_cards
+                        )
+                        is_selected = st.checkbox("", key=checkbox_key, value=is_already_selected)
+
+                        if is_selected and not is_already_selected:
                             st.session_state.selected_cards.append(card)
-                        elif not is_selected and card in st.session_state.selected_cards:
-                            st.session_state.selected_cards.remove(card)
+                        elif not is_selected and is_already_selected:
+                            st.session_state.selected_cards = [
+                                c for c in st.session_state.selected_cards
+                                if not (c['card_name'] == card['card_name'] and 
+                                      c['set'] == card['set'] and 
+                                      c['number'] == card['number'])
+                            ]
 
                     with col_title:
                         st.markdown(f"### {card['card_name']}")
@@ -91,48 +105,6 @@ if card_name:
                     with m3:
                         st.metric("Updated", card['last_update'])
 
-        # Update Calculator Section with selected cards
-        with calculator_container:
-            if st.session_state.selected_cards:
-                st.markdown("### Selected Cards Calculator")
-
-                # Currency selection
-                currency_options = get_currency_options()
-                selected_currency = st.selectbox(
-                    "Select Currency",
-                    options=list(currency_options.keys()),
-                    format_func=lambda x: f"{x} - {currency_options[x]}"
-                )
-
-                # Display selected cards and total
-                total_usd = sum(card['current_price'] for card in st.session_state.selected_cards)
-
-                # Display selected cards in a table
-                st.markdown("#### Selected Cards:")
-                for card in st.session_state.selected_cards:
-                    # Convert individual card price
-                    conversion = convert_price(card['current_price'], 'USD', selected_currency)
-                    if conversion['success']:
-                        converted_price = format_currency(conversion['amount'], selected_currency)
-                        usd_price = format_currency(card['current_price'], 'USD')
-                        st.markdown(f"- {card['card_name']}: {usd_price} ({converted_price})")
-                    else:
-                        st.markdown(f"- {card['card_name']}: ${card['current_price']:.2f}")
-
-                # Show total with currency conversion
-                st.markdown("---")
-                conversion = convert_price(total_usd, 'USD', selected_currency)
-                if conversion['success']:
-                    converted_total = format_currency(conversion['amount'], selected_currency)
-                    st.markdown(f"""
-                    **Total:** ${total_usd:.2f}  
-                    **Converted Total:** {converted_total}  
-                    *Exchange rate as of {conversion['date']}*
-                    """)
-                else:
-                    st.markdown(f"**Total:** ${total_usd:.2f}")
-                    st.error(f"Currency conversion error: {conversion.get('error')}")
-
     else:
         st.error(f"Error fetching card data: {result['error']}")
         st.info("""
@@ -140,6 +112,50 @@ if card_name:
         - Check the spelling of the card name
         - Some cards might not have market data available
         """)
+
+# Update Calculator Section with selected cards (outside the search results)
+with calculator_container:
+    if st.session_state.selected_cards:
+        st.markdown("### Selected Cards Calculator")
+
+        # Currency selection
+        currency_options = get_currency_options()
+        selected_currency = st.selectbox(
+            "Select Currency",
+            options=list(currency_options.keys()),
+            format_func=lambda x: f"{x} - {currency_options[x]}"
+        )
+
+        # Display selected cards and total
+        total_usd = sum(card['current_price'] for card in st.session_state.selected_cards)
+
+        # Display selected cards in a table
+        st.markdown("#### Selected Cards:")
+        st.markdown(f"*Total cards selected: {len(st.session_state.selected_cards)}*")
+
+        for card in st.session_state.selected_cards:
+            # Convert individual card price
+            conversion = convert_price(card['current_price'], 'USD', selected_currency)
+            if conversion['success']:
+                converted_price = format_currency(conversion['amount'], selected_currency)
+                usd_price = format_currency(card['current_price'], 'USD')
+                st.markdown(f"- {card['card_name']} ({card['set']}): {usd_price} ({converted_price})")
+            else:
+                st.markdown(f"- {card['card_name']} ({card['set']}): ${card['current_price']:.2f}")
+
+        # Show total with currency conversion
+        st.markdown("---")
+        conversion = convert_price(total_usd, 'USD', selected_currency)
+        if conversion['success']:
+            converted_total = format_currency(conversion['amount'], selected_currency)
+            st.markdown(f"""
+            **Total:** ${total_usd:.2f}  
+            **Converted Total:** {converted_total}  
+            *Exchange rate as of {conversion['date']}*
+            """)
+        else:
+            st.markdown(f"**Total:** ${total_usd:.2f}")
+            st.error(f"Currency conversion error: {conversion.get('error')}")
 
 # Hide Streamlit default menu and footer
 hide_streamlit_style = """
