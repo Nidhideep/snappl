@@ -74,8 +74,8 @@ if st.session_state.user_name:
                             checkbox_key = f"select_{card['card_name']}_{card['set']}_{card['number']}"
                             # Check if card is already selected
                             is_already_selected = any(
-                                selected['card_name'] == card['card_name'] and 
-                                selected['set'] == card['set'] and 
+                                selected['card_name'] == card['card_name'] and
+                                selected['set'] == card['set'] and
                                 selected['number'] == card['number']
                                 for selected in st.session_state.selected_cards
                             )
@@ -86,9 +86,9 @@ if st.session_state.user_name:
                             elif not is_selected and is_already_selected:
                                 st.session_state.selected_cards = [
                                     c for c in st.session_state.selected_cards
-                                    if not (c['card_name'] == card['card_name'] and 
-                                          c['set'] == card['set'] and 
-                                          c['number'] == card['number'])
+                                    if not (c['card_name'] == card['card_name'] and
+                                            c['set'] == card['set'] and
+                                            c['number'] == card['number'])
                                 ]
 
                         with col_title:
@@ -136,6 +136,15 @@ if st.session_state.user_name:
             # Add personalized message with total
             total_usd = sum(card['current_price'] for card in st.session_state.selected_cards)
             st.markdown(f"### Hey {st.session_state.user_name}! Your collection is worth: ${total_usd:.2f} 💰")
+
+            # Add disclaimer
+            st.info("""
+            **Disclaimer:** 
+            - These calculations are for entertainment purposes only
+            - Actual card values depend on condition, authenticity, and market demand
+            - Market prices can vary significantly from these estimates
+            - This tool is designed for fun and educational purposes
+            """)
 
             # Currency selection
             currency_options = get_currency_options()
