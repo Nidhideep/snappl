@@ -2,35 +2,60 @@ import requests
 import streamlit as st
 from datetime import datetime, timedelta
 from typing import Dict, Optional
+import time
 
 @st.cache_data(ttl=3600)  # Cache exchange rates for 1 hour
-def fetch_exchange_rates(base_currency: str = "USD") -> Dict:
+def fetch_exchange_rates(base_currency: str = "USD", max_retries: int = 3) -> Dict:
     """
-    Fetch exchange rates from exchangerate.host API
+    Fetch exchange rates from exchangerate.host API with retry mechanism
     """
-    try:
-        response = requests.get(f"https://api.exchangerate.host/latest?base={base_currency}")
-        data = response.json()
-        if data.get("success", True):  # API returns success field
+    for attempt in range(max_retries):
+        try:
+            # Add debug output
+            st.write(f"Fetching exchange rates (attempt {attempt + 1})")
+
+            response = requests.get(
+                f"https://api.exchangerate.host/latest",
+                params={"base": base_currency},
+                timeout=10
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("rates"):
+                    return {
+                        "success": True,
+                        "rates": data["rates"],
+                        "date": data.get("date", datetime.now().strftime("%Y-%m-%d")),
+                        "error": None
+                    }
+
+            # If we get here, something went wrong with the response
+            st.write(f"API Response Status: {response.status_code}")
+            st.write(f"API Response: {response.text}")
+
+            if attempt < max_retries - 1:
+                time.sleep(1)  # Wait before retrying
+                continue
+
             return {
-                "success": True,
-                "rates": data.get("rates", {}),
-                "date": data.get("date"),
-                "error": None
+                "success": False,
+                "rates": {},
+                "date": None,
+                "error": f"API Error: Status {response.status_code}"
             }
-        return {
-            "success": False,
-            "rates": {},
-            "date": None,
-            "error": "Failed to fetch exchange rates"
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "rates": {},
-            "date": None,
-            "error": f"API Error: {str(e)}"
-        }
+
+        except Exception as e:
+            st.write(f"Error during attempt {attempt + 1}: {str(e)}")
+            if attempt < max_retries - 1:
+                time.sleep(1)  # Wait before retrying
+                continue
+            return {
+                "success": False,
+                "rates": {},
+                "date": None,
+                "error": f"Connection error: {str(e)}"
+            }
 
 def get_currency_options() -> Dict[str, str]:
     """
@@ -61,7 +86,7 @@ def get_currency_options() -> Dict[str, str]:
 
 def convert_price(amount: float, from_currency: str, to_currency: str) -> Dict:
     """
-    Convert price from one currency to another
+    Convert price from one currency to another with improved error handling
     """
     if from_currency == to_currency:
         return {
@@ -106,9 +131,9 @@ def format_currency(amount: float, currency: str) -> str:
     }
 
     symbol = currency_symbols.get(currency, currency + ' ')
-    
+
     # Special case for currencies that don't typically show decimals
     if currency in ['JPY', 'KRW']:
         return f"{symbol}{int(amount):,}"
-    
+
     return f"{symbol}{amount:,.2f}"
