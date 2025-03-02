@@ -1,5 +1,6 @@
 import streamlit as st
 from utils.market_data import PokemonMarketData
+from utils.currency_converter import get_currency_options, convert_price, format_currency
 
 # Page configuration
 st.set_page_config(
@@ -96,13 +97,7 @@ if card_name:
                 st.markdown("### Selected Cards Calculator")
 
                 # Currency selection
-                currency_options = {
-                    'USD': 'US Dollar',
-                    'EUR': 'Euro',
-                    'GBP': 'British Pound',
-                    'JPY': 'Japanese Yen',
-                    'AUD': 'Australian Dollar'
-                }
+                currency_options = get_currency_options()
                 selected_currency = st.selectbox(
                     "Select Currency",
                     options=list(currency_options.keys()),
@@ -115,13 +110,28 @@ if card_name:
                 # Display selected cards in a table
                 st.markdown("#### Selected Cards:")
                 for card in st.session_state.selected_cards:
-                    st.markdown(f"- {card['card_name']}: ${card['current_price']:.2f}")
+                    # Convert individual card price
+                    conversion = convert_price(card['current_price'], 'USD', selected_currency)
+                    if conversion['success']:
+                        converted_price = format_currency(conversion['amount'], selected_currency)
+                        usd_price = format_currency(card['current_price'], 'USD')
+                        st.markdown(f"- {card['card_name']}: {usd_price} ({converted_price})")
+                    else:
+                        st.markdown(f"- {card['card_name']}: ${card['current_price']:.2f}")
 
                 # Show total with currency conversion
                 st.markdown("---")
-                st.markdown(f"**Total (USD):** ${total_usd:.2f}")
-                if selected_currency != 'USD':
-                    st.markdown(f"*Currency conversion to {selected_currency} will be displayed here*")
+                conversion = convert_price(total_usd, 'USD', selected_currency)
+                if conversion['success']:
+                    converted_total = format_currency(conversion['amount'], selected_currency)
+                    st.markdown(f"""
+                    **Total:** ${total_usd:.2f}  
+                    **Converted Total:** {converted_total}  
+                    *Exchange rate as of {conversion['date']}*
+                    """)
+                else:
+                    st.markdown(f"**Total:** ${total_usd:.2f}")
+                    st.error(f"Currency conversion error: {conversion.get('error')}")
 
     else:
         st.error(f"Error fetching card data: {result['error']}")
