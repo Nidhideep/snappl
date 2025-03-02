@@ -11,11 +11,9 @@ def fetch_exchange_rates(base_currency: str = "USD", max_retries: int = 3) -> Di
     """
     for attempt in range(max_retries):
         try:
-            # Add debug output
-            st.write(f"Fetching exchange rates (attempt {attempt + 1})")
-
+            # Use the free endpoint that doesn't require API key
             response = requests.get(
-                f"https://api.exchangerate.host/latest",
+                "https://api.exchangerate.host/latest",
                 params={"base": base_currency},
                 timeout=10
             )
