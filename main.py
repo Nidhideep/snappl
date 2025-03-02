@@ -1,6 +1,7 @@
 import streamlit as st
 from utils.market_data import PokemonMarketData
 from utils.currency_converter import get_currency_options, convert_price, format_currency
+from components.shared_collections import initialize_shared_state, update_user_collection, display_shared_collections
 
 # Page configuration
 st.set_page_config(
@@ -13,6 +14,8 @@ st.set_page_config(
 # Initialize session state for user name
 if 'user_name' not in st.session_state:
     st.session_state.user_name = None
+
+initialize_shared_state() #Added
 
 # User name input form
 if st.session_state.user_name is None:
@@ -137,6 +140,13 @@ if st.session_state.user_name:
             total_usd = sum(card['current_price'] for card in st.session_state.selected_cards)
             st.markdown(f"### Hey {st.session_state.user_name}! Your collection is worth: ${total_usd:.2f} 💰")
 
+            # Update shared collections
+            update_user_collection(
+                st.session_state.user_name,
+                st.session_state.selected_cards,
+                total_usd
+            )
+
             # Add disclaimer
             st.info("""
             **Disclaimer:** 
@@ -181,6 +191,9 @@ if st.session_state.user_name:
             else:
                 st.markdown(f"**Total:** ${total_usd:.2f}")
                 st.error(f"Currency conversion error: {conversion.get('error')}")
+
+            st.markdown("---") #Added
+            display_shared_collections(st.session_state.user_name) #Added
 
     # Hide Streamlit default menu and footer
     hide_streamlit_style = """
