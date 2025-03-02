@@ -7,14 +7,14 @@ import time
 @st.cache_data(ttl=3600)  # Cache exchange rates for 1 hour
 def fetch_exchange_rates(base_currency: str = "USD", max_retries: int = 3) -> Dict:
     """
-    Fetch exchange rates from exchangerate.host API with retry mechanism
+    Fetch exchange rates from Frankfurter API with retry mechanism
     """
     for attempt in range(max_retries):
         try:
-            # Use the free endpoint that doesn't require API key
+            # Use Frankfurter API which is free and requires no API key
             response = requests.get(
-                "https://api.exchangerate.host/latest",
-                params={"base": base_currency},
+                f"https://api.frankfurter.app/latest",
+                params={"from": base_currency},
                 timeout=10
             )
 
@@ -29,9 +29,6 @@ def fetch_exchange_rates(base_currency: str = "USD", max_retries: int = 3) -> Di
                     }
 
             # If we get here, something went wrong with the response
-            st.write(f"API Response Status: {response.status_code}")
-            st.write(f"API Response: {response.text}")
-
             if attempt < max_retries - 1:
                 time.sleep(1)  # Wait before retrying
                 continue
@@ -44,7 +41,6 @@ def fetch_exchange_rates(base_currency: str = "USD", max_retries: int = 3) -> Di
             }
 
         except Exception as e:
-            st.write(f"Error during attempt {attempt + 1}: {str(e)}")
             if attempt < max_retries - 1:
                 time.sleep(1)  # Wait before retrying
                 continue
