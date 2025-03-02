@@ -136,9 +136,24 @@ if st.session_state.user_name:
         if st.session_state.selected_cards:
             st.markdown("### Selected Cards Calculator")
 
-            # Add personalized message with total
+            # Currency selection
+            currency_options = get_currency_options()
+            selected_currency = st.selectbox(
+                "Select Currency",
+                options=list(currency_options.keys()),
+                format_func=lambda x: f"{x} - {currency_options[x]}"
+            )
+
+            # Add personalized message with total in selected currency
             total_usd = sum(card['current_price'] for card in st.session_state.selected_cards)
-            st.markdown(f"### Hey {st.session_state.user_name}! Your collection is worth: ${total_usd:.2f} 💰")
+            conversion = convert_price(total_usd, 'USD', selected_currency)
+
+            if conversion['success']:
+                converted_total = format_currency(conversion['amount'], selected_currency)
+                st.markdown(f"### Hey {st.session_state.user_name}! Your collection is worth: {converted_total} 💰")
+            else:
+                st.markdown(f"### Hey {st.session_state.user_name}! Your collection is worth: ${total_usd:.2f} 💰")
+                st.error(f"Currency conversion error: {conversion.get('error')}")
 
             # Update shared collections
             update_user_collection(
@@ -155,14 +170,6 @@ if st.session_state.user_name:
             - Market prices can vary significantly from these estimates
             - This tool is designed for fun and educational purposes
             """)
-
-            # Currency selection
-            currency_options = get_currency_options()
-            selected_currency = st.selectbox(
-                "Select Currency",
-                options=list(currency_options.keys()),
-                format_func=lambda x: f"{x} - {currency_options[x]}"
-            )
 
             # Display selected cards in a table
             st.markdown("#### Selected Cards:")
