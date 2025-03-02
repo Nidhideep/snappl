@@ -18,10 +18,10 @@ if 'user_name' not in st.session_state:
 if st.session_state.user_name is None:
     with st.form("user_name_form"):
         user_name = st.text_input("Enter your name:", placeholder="e.g., John")
-        submit = st.form_submit_button("Start Trading!")
+        submit = st.form_submit_button("Start Feeling Rich!")
         if submit and user_name:
             st.session_state.user_name = user_name
-            st.experimental_rerun()
+            st.rerun()
 
 # Only show the main app if user has entered their name
 if st.session_state.user_name:
