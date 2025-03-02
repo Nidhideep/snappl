@@ -18,6 +18,10 @@ st.title("Snappl Pokemon Card Market Analysis")
 st.markdown("Enter a Pokemon card name to get real-time market data and card information.")
 st.markdown("*Info: There are some Pokemon cards we have not got written down!*")
 
+# Initialize session state for selected cards
+if 'selected_cards' not in st.session_state:
+    st.session_state.selected_cards = []
+
 # Search input
 card_name = st.text_input(
     "Search for a Pokemon card:",
@@ -33,6 +37,10 @@ if card_name:
 
         st.markdown(f"### Found {len(cards_data)} variants of {card_name}")
 
+        # Calculator Section at the top
+        calculator_container = st.container()
+        st.markdown("---")
+
         # Create a grid layout for multiple cards
         cols = st.columns(2)  # Display 2 cards per row
 
@@ -43,12 +51,24 @@ if card_name:
                 st.markdown("---")
                 # Card container
                 with st.container():
+                    # Checkbox and card title in the same row
+                    col_check, col_title = st.columns([1, 4])
+                    with col_check:
+                        checkbox_key = f"select_{idx}_{card['card_name']}"
+                        is_selected = st.checkbox("", key=checkbox_key)
+                        if is_selected and card not in st.session_state.selected_cards:
+                            st.session_state.selected_cards.append(card)
+                        elif not is_selected and card in st.session_state.selected_cards:
+                            st.session_state.selected_cards.remove(card)
+
+                    with col_title:
+                        st.markdown(f"### {card['card_name']}")
+
                     # Display card image and basic info
                     if card.get('image_url'):
                         st.image(card['image_url'], caption=card['card_name'], use_container_width=True)
 
                     # Card details
-                    st.markdown(f"### {card['card_name']}")
                     st.markdown(f"""
                     **Set:** {card['set']}  
                     **Number:** {card['number']}  
@@ -69,6 +89,39 @@ if card_name:
                         st.metric("Availability", card['availability'])
                     with m3:
                         st.metric("Updated", card['last_update'])
+
+        # Update Calculator Section with selected cards
+        with calculator_container:
+            if st.session_state.selected_cards:
+                st.markdown("### Selected Cards Calculator")
+
+                # Currency selection
+                currency_options = {
+                    'USD': 'US Dollar',
+                    'EUR': 'Euro',
+                    'GBP': 'British Pound',
+                    'JPY': 'Japanese Yen',
+                    'AUD': 'Australian Dollar'
+                }
+                selected_currency = st.selectbox(
+                    "Select Currency",
+                    options=list(currency_options.keys()),
+                    format_func=lambda x: f"{x} - {currency_options[x]}"
+                )
+
+                # Display selected cards and total
+                total_usd = sum(card['current_price'] for card in st.session_state.selected_cards)
+
+                # Display selected cards in a table
+                st.markdown("#### Selected Cards:")
+                for card in st.session_state.selected_cards:
+                    st.markdown(f"- {card['card_name']}: ${card['current_price']:.2f}")
+
+                # Show total with currency conversion
+                st.markdown("---")
+                st.markdown(f"**Total (USD):** ${total_usd:.2f}")
+                if selected_currency != 'USD':
+                    st.markdown(f"*Currency conversion to {selected_currency} will be displayed here*")
 
     else:
         st.error(f"Error fetching card data: {result['error']}")
