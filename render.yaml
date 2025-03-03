@@ -4,7 +4,6 @@ services:
     env: python
     buildCommand: |
       apt-get update && apt-get install -y tesseract-ocr
-      pip install --upgrade pip
       pip install numpy pandas plotly streamlit streamlit-authenticator requests python-dateutil pyyaml opencv-python pytesseract
       pip install --no-deps .
     startCommand: streamlit run main.py
