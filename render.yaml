@@ -4,7 +4,17 @@ services:
     env: python
     buildCommand: |
       apt-get update && apt-get install -y tesseract-ocr
-      pip install numpy pandas plotly streamlit streamlit-authenticator requests python-dateutil pyyaml opencv-python pytesseract
+      echo "numpy>=2.2.3" > requirements.txt
+      echo "pandas>=2.2.3" >> requirements.txt
+      echo "plotly>=6.0.0" >> requirements.txt
+      echo "streamlit-authenticator>=0.4.1" >> requirements.txt
+      echo "streamlit>=1.42.2" >> requirements.txt
+      echo "pyyaml>=6.0.2" >> requirements.txt
+      echo "pytesseract>=0.3.13" >> requirements.txt
+      echo "opencv-python>=4.11.0.86" >> requirements.txt
+      echo "requests>=2.32.3" >> requirements.txt
+      echo "python-dateutil>=2.9.0.post0" >> requirements.txt
+      pip install -r requirements.txt
       pip install --no-deps .
     startCommand: streamlit run main.py
     envVars:
