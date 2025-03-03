@@ -18,12 +18,12 @@ An interactive platform for Pokemon card enthusiasts to explore, analyze, and tr
 - Pokemon TCG API
 - Frankfurter Currency API
 
-## Setup
+## Local Setup
 
 1. Clone the repository:
 ```bash
-git clone <your-repo-url>
-cd pokemon-card-market-analysis
+git clone https://github.com/Nidhideep/snappl.git
+cd snappl
 ```
 
 2. Install dependencies:
@@ -42,6 +42,18 @@ POKEMON_TCG_API_KEY = "your-api-key"
 ```bash
 streamlit run main.py
 ```
+
+## Deployment on Render
+
+1. Fork or clone this repository to your GitHub account
+2. Sign up on render.com
+3. Create a new Web Service
+   - Connect your GitHub repository
+   - Select the Python environment
+   - The build and start commands are pre-configured in render.yaml
+4. Add your environment variables:
+   - Add POKEMON_TCG_API_KEY in the Render dashboard
+5. Deploy your application
 
 ## Usage
 
