@@ -3,6 +3,7 @@ services:
     name: snappl-pokemon-market
     env: python
     buildCommand: |
+      apt-get update && apt-get install -y tesseract-ocr
       pip install .
     startCommand: streamlit run main.py
     envVars:
