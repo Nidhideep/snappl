@@ -44,5 +44,5 @@ ENV/
 replit.nix
 .breakpoints
 
-# Allow requirements.txt to be tracked
-!requirements.txt
+# Note: We are managing dependencies directly in render.yaml
+# No requirements.txt needed
