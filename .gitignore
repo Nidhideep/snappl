@@ -43,3 +43,6 @@ ENV/
 .pythonlibs/
 replit.nix
 .breakpoints
+
+# Allow requirements.txt to be tracked
+!requirements.txt

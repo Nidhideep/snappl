@@ -3,9 +3,16 @@ services:
     name: snappl-pokemon-market
     env: python
     buildCommand: |
+      # Install system dependencies
       apt-get update && apt-get install -y tesseract-ocr
-      pip install -r requirements.txt
-      pip install --no-deps .
+
+      # Install Python packages directly
+      python -m pip install --upgrade pip
+      pip install numpy>=2.2.3 pandas>=2.2.3 plotly>=6.0.0 \
+          streamlit-authenticator>=0.4.1 streamlit>=1.42.2 \
+          pyyaml>=6.0.2 pytesseract>=0.3.13 opencv-python>=4.11.0.86 \
+          requests>=2.32.3 python-dateutil>=2.9.0.post0
+
     startCommand: streamlit run main.py
     envVars:
       - key: PYTHON_VERSION
