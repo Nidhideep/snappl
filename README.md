@@ -28,7 +28,10 @@ cd snappl
 
 2. Install dependencies:
 ```bash
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+pip install numpy>=2.2.3 pandas>=2.2.3 plotly>=6.0.0 streamlit-authenticator>=0.4.1 \
+    streamlit>=1.42.2 pyyaml>=6.0.2 pytesseract>=0.3.13 opencv-python>=4.11.0.86 \
+    requests>=2.32.3 python-dateutil>=2.9.0.post0
 ```
 
 3. Set up your environment variables:
@@ -50,7 +53,7 @@ streamlit run main.py
 3. Create a new Web Service
    - Connect your GitHub repository
    - Select the Python environment
-   - The build and start commands are pre-configured in render.yaml
+   - Use the build command from render.yaml
 4. Add your environment variables:
    - Add POKEMON_TCG_API_KEY in the Render dashboard
 5. Deploy your application
